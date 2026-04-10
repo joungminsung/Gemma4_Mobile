@@ -1,0 +1,43 @@
+# model/config/distillation_advanced_config.yaml
+teacher:
+  model: "google/gemma-4-e2b"
+
+student:
+  hidden_size: 1024
+  num_hidden_layers: 12
+  num_attention_heads: 8
+  intermediate_size: 4096
+  vocab_size: 262144
+
+# 레이어 매핑: Student layer → Teacher layer
+# Student 12 layers → Teacher ~26 layers (roughly every 2nd layer)
+layer_mapping:
+  0: 0
+  1: 2
+  2: 4
+  3: 7
+  4: 9
+  5: 11
+  6: 13
+  7: 16
+  8: 18
+  9: 20
+  10: 22
+  11: 25
+
+loss:
+  temperature: 2.0
+  alpha_ce: 0.3        # Hard label loss
+  alpha_kd: 0.3        # Logit distillation loss
+  alpha_hidden: 0.2    # Hidden state matching loss
+  alpha_attn: 0.2      # Attention transfer loss
+
+training:
+  num_epochs: 5
+  per_device_train_batch_size: 8
+  gradient_accumulation_steps: 8
+  learning_rate: 5.0e-4
+  warmup_ratio: 0.05
+  max_seq_length: 1024
+  output_dir: "./output/distillation"
+  save_every_n_steps: 1000
