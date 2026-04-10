@@ -13,3 +13,4 @@ evaluate>=0.4.0
 scipy>=1.14.0
 lm-eval>=0.4.0
 konlpy>=0.6.0
+trl>=0.12.0
