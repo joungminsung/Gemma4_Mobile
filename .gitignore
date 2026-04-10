@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Model outputs (학습 결과물 — 용량이 크므로 git에 올리지 않음)
+model/output/
+model/data/processed/
+model/data/dpo_processed/
+model/data/test_processed/
+
+# Model files
+*.task
+*.bin
+*.safetensors
+*.gguf
+*.pt
+*.pth
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Gradle (Android)
+app/.gradle/
+app/build/
+app/app/build/
+*.apk
+local.properties
