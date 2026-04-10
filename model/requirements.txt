@@ -1,0 +1,13 @@
+torch>=2.3.0
+transformers>=4.45.0
+peft>=0.13.0
+datasets>=3.0.0
+accelerate>=1.0.0
+bitsandbytes>=0.44.0
+mediapipe>=0.10.18
+sentencepiece>=0.2.0
+protobuf>=5.28.0
+pyyaml>=6.0
+tqdm>=4.66.0
+evaluate>=0.4.0
+scipy>=1.14.0

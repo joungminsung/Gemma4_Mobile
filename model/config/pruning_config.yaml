@@ -1,0 +1,15 @@
+# model/config/pruning_config.yaml
+model:
+  base_model: "google/gemma-4-e2b"
+
+pruning:
+  target_sparsity: 0.4
+  importance_metric: "taylor"
+  pruning_targets:
+    - "attention_heads"
+    - "ffn_layers"
+  min_layers: 12
+  calibration_samples: 512
+
+output:
+  output_dir: "./output/pruning"
