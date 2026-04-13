@@ -5,11 +5,11 @@ import com.google.ai.edge.litertlm.Conversation
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
 import com.google.ai.edge.litertlm.Message
-import com.google.ai.edge.litertlm.SessionConfig
-import com.google.ai.edge.litertlm.SamplerConfig
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
 
 data class Turn(val role: String, val content: String)
 
@@ -29,21 +29,30 @@ class GemmaInferenceEngine {
         return message
     }
 
-    fun loadModel(modelPath: String, context: android.content.Context) {
+    suspend fun loadModel(modelPath: String, context: android.content.Context) {
         state = InferenceState.LOADING
-        try {
-            val engineConfig = EngineConfig(
-                modelPath = modelPath,
-                backend = Backend.GPU,
-                cacheDir = context.cacheDir.absolutePath,
-            )
-            engine = Engine(engineConfig)
-            engine!!.initialize()
-            conversation = engine!!.createConversation()
-            state = InferenceState.READY
-        } catch (e: Exception) {
-            state = InferenceState.ERROR
-            throw e
+        withContext(Dispatchers.IO) {
+            try {
+                // GPU가 안 되면 CPU로 폴백
+                val backend = try {
+                    Backend.GPU
+                } catch (_: Exception) {
+                    Backend.CPU
+                }
+
+                val engineConfig = EngineConfig(
+                    modelPath = modelPath,
+                    backend = backend,
+                    cacheDir = context.cacheDir.absolutePath,
+                )
+                engine = Engine(engineConfig)
+                engine!!.initialize()
+                conversation = engine!!.createConversation()
+                state = InferenceState.READY
+            } catch (e: Exception) {
+                state = InferenceState.ERROR
+                throw e
+            }
         }
     }
 
@@ -58,7 +67,7 @@ class GemmaInferenceEngine {
             }
 
         state = InferenceState.READY
-    }
+    }.flowOn(Dispatchers.IO)
 
     fun resetConversation() {
         conversation?.close()

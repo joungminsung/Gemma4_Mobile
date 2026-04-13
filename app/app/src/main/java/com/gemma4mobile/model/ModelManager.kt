@@ -37,21 +37,17 @@ class ModelManager @Inject constructor(
         return downloader.download(tier)
     }
 
-    fun loadModel(tier: ModelTier) {
+    suspend fun loadModel(tier: ModelTier) {
         engine.unload()
         val path = downloader.getModelPath(tier)
         engine.loadModel(path, context)
         _currentTier.value = tier
     }
 
-    /**
-     * 개발자 모드: 로컬 경로의 .task 파일을 직접 로드.
-     * adb push로 넣은 모델을 테스트할 때 사용.
-     */
-    fun loadModelFromPath(path: String) {
+    suspend fun loadModelFromPath(path: String) {
         engine.unload()
         engine.loadModel(path, context)
-        _currentTier.value = ModelTier.LITE // 테스트 모델은 Lite로 표시
+        _currentTier.value = ModelTier.LITE
     }
 
     fun unloadModel() {

@@ -83,20 +83,37 @@ fun OnboardingScreen(
             )
 
             Spacer(Modifier.height(16.dp))
+
+            var isLoading by remember { mutableStateOf(false) }
+
             Button(
                 onClick = {
                     error = null
-                    try {
-                        modelManager.loadModelFromPath(devModelPath)
-                        onModelReady()
-                    } catch (e: Exception) {
-                        error = "모델 로드 실패: ${e.message}"
+                    isLoading = true
+                    scope.launch {
+                        try {
+                            modelManager.loadModelFromPath(devModelPath)
+                            onModelReady()
+                        } catch (e: Exception) {
+                            isLoading = false
+                            error = "모델 로드 실패: ${e.message}"
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = fileExists,
+                enabled = fileExists && !isLoading,
             ) {
-                Text("로컬 모델로 시작")
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("모델 로딩 중...")
+                } else {
+                    Text("로컬 모델로 시작")
+                }
             }
 
             error?.let {
@@ -184,8 +201,16 @@ fun OnboardingScreen(
             onClick = {
                 val tier = selectedTier ?: return@Button
                 if (modelManager.isModelDownloaded(tier)) {
-                    modelManager.loadModel(tier)
-                    onModelReady()
+                    isDownloading = true
+                    scope.launch {
+                        try {
+                            modelManager.loadModel(tier)
+                            onModelReady()
+                        } catch (e: Exception) {
+                            isDownloading = false
+                            error = "모델 로드 실패: ${e.message}"
+                        }
+                    }
                 } else {
                     isDownloading = true
                     error = null
@@ -194,9 +219,13 @@ fun OnboardingScreen(
                             when (state) {
                                 is DownloadState.Progress -> downloadProgress = state.percent
                                 is DownloadState.Complete -> {
-                                    isDownloading = false
-                                    modelManager.loadModel(tier)
-                                    onModelReady()
+                                    try {
+                                        modelManager.loadModel(tier)
+                                        onModelReady()
+                                    } catch (e: Exception) {
+                                        isDownloading = false
+                                        error = "모델 로드 실패: ${e.message}"
+                                    }
                                 }
                                 is DownloadState.Error -> {
                                     isDownloading = false
