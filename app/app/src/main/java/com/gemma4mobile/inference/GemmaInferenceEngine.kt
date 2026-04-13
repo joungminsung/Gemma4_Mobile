@@ -1,5 +1,6 @@
 package com.gemma4mobile.inference
 
+import android.util.Log
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Conversation
 import com.google.ai.edge.litertlm.Engine
@@ -32,27 +33,34 @@ class GemmaInferenceEngine {
     suspend fun loadModel(modelPath: String, context: android.content.Context) {
         state = InferenceState.LOADING
         withContext(Dispatchers.IO) {
-            try {
-                // GPU가 안 되면 CPU로 폴백
-                val backend = try {
-                    Backend.GPU
-                } catch (_: Exception) {
-                    Backend.CPU
-                }
+            // GPU 먼저 시도, 실패하면 CPU 폴백
+            val backends = listOf(Backend.GPU, Backend.CPU)
+            var lastError: Exception? = null
 
-                val engineConfig = EngineConfig(
-                    modelPath = modelPath,
-                    backend = backend,
-                    cacheDir = context.cacheDir.absolutePath,
-                )
-                engine = Engine(engineConfig)
-                engine!!.initialize()
-                conversation = engine!!.createConversation()
-                state = InferenceState.READY
-            } catch (e: Exception) {
-                state = InferenceState.ERROR
-                throw e
+            for (backend in backends) {
+                try {
+                    Log.d(TAG, "Trying backend: $backend for model: $modelPath")
+                    val engineConfig = EngineConfig(
+                        modelPath = modelPath,
+                        backend = backend,
+                        cacheDir = context.cacheDir.absolutePath,
+                    )
+                    engine = Engine(engineConfig)
+                    engine!!.initialize()
+                    conversation = engine!!.createConversation()
+                    state = InferenceState.READY
+                    Log.d(TAG, "Model loaded successfully with backend: $backend")
+                    return@withContext
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed with backend $backend: ${e.message}")
+                    lastError = e
+                    engine?.close()
+                    engine = null
+                }
             }
+
+            state = InferenceState.ERROR
+            throw lastError ?: RuntimeException("Failed to load model")
         }
     }
 
@@ -80,5 +88,9 @@ class GemmaInferenceEngine {
         engine?.close()
         engine = null
         state = InferenceState.UNLOADED
+    }
+
+    companion object {
+        private const val TAG = "GemmaInference"
     }
 }
