@@ -44,6 +44,16 @@ class ModelManager @Inject constructor(
         _currentTier.value = tier
     }
 
+    /**
+     * 개발자 모드: 로컬 경로의 .task 파일을 직접 로드.
+     * adb push로 넣은 모델을 테스트할 때 사용.
+     */
+    fun loadModelFromPath(path: String) {
+        engine.unload()
+        engine.loadModel(path, context)
+        _currentTier.value = ModelTier.LITE // 테스트 모델은 Lite로 표시
+    }
+
     fun unloadModel() {
         engine.unload()
         _currentTier.value = null
@@ -51,4 +61,9 @@ class ModelManager @Inject constructor(
 
     val inferenceState: InferenceState
         get() = engine.state
+
+    companion object {
+        /** 개발용 로컬 모델 경로 */
+        const val DEV_MODEL_PATH = "/data/local/tmp/gemma4mobile/gemma4_ko_lite.task"
+    }
 }

@@ -11,6 +11,7 @@ import com.gemma4mobile.model.DownloadState
 import com.gemma4mobile.model.ModelManager
 import com.gemma4mobile.model.ModelTier
 import kotlinx.coroutines.launch
+import java.io.File
 
 @Composable
 fun OnboardingScreen(
@@ -22,6 +23,8 @@ fun OnboardingScreen(
     var selectedTier by remember { mutableStateOf(recommended) }
     var downloadProgress by remember { mutableIntStateOf(0) }
     var isDownloading by remember { mutableStateOf(false) }
+    var devMode by remember { mutableStateOf(false) }
+    var devModelPath by remember { mutableStateOf(ModelManager.DEV_MODEL_PATH) }
     var error by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
@@ -43,6 +46,68 @@ fun OnboardingScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(32.dp))
+
+        // 개발자 모드 토글
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "개발자 모드 (로컬 모델)",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.weight(1f))
+            Switch(checked = devMode, onCheckedChange = { devMode = it })
+        }
+
+        if (devMode) {
+            Spacer(Modifier.height(12.dp))
+            OutlinedTextField(
+                value = devModelPath,
+                onValueChange = { devModelPath = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("모델 파일 경로") },
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodySmall,
+            )
+            Spacer(Modifier.height(8.dp))
+
+            val fileExists = remember(devModelPath) { File(devModelPath).exists() }
+
+            Text(
+                text = if (fileExists) "모델 파일 발견" else "파일 없음 — adb push로 먼저 넣어주세요",
+                style = MaterialTheme.typography.bodySmall,
+                color = if (fileExists) MaterialTheme.colorScheme.secondary
+                       else MaterialTheme.colorScheme.error,
+            )
+
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    error = null
+                    try {
+                        modelManager.loadModelFromPath(devModelPath)
+                        onModelReady()
+                    } catch (e: Exception) {
+                        error = "모델 로드 실패: ${e.message}"
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = fileExists,
+            ) {
+                Text("로컬 모델로 시작")
+            }
+
+            error?.let {
+                Spacer(Modifier.height(8.dp))
+                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+            }
+
+            return
+        }
+
+        // ─── 일반 모드 ───
 
         if (recommended == null) {
             Text(
