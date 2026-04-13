@@ -35,8 +35,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        }
     }
 
     buildFeatures {
@@ -50,12 +52,13 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.tooling.preview)
     debugImplementation(libs.compose.tooling)
-    implementation("com.google.ai.edge.litertlm:litertlm-android:0.8.0")
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.10.0")
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    ksp("org.jetbrains.kotlin:kotlin-metadata-jvm:2.3.0")
     implementation(libs.hilt.navigation.compose)
     implementation(libs.lifecycle.viewmodel.compose)
     implementation(libs.lifecycle.runtime.compose)

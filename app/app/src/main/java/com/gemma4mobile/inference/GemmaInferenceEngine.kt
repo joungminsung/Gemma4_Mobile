@@ -33,34 +33,23 @@ class GemmaInferenceEngine {
     suspend fun loadModel(modelPath: String, context: android.content.Context) {
         state = InferenceState.LOADING
         withContext(Dispatchers.IO) {
-            // GPU 먼저 시도, 실패하면 CPU 폴백
-            val backends = listOf(Backend.GPU, Backend.CPU)
-            var lastError: Exception? = null
-
-            for (backend in backends) {
-                try {
-                    Log.d(TAG, "Trying backend: $backend for model: $modelPath")
-                    val engineConfig = EngineConfig(
-                        modelPath = modelPath,
-                        backend = backend,
-                        cacheDir = context.cacheDir.absolutePath,
-                    )
-                    engine = Engine(engineConfig)
-                    engine!!.initialize()
-                    conversation = engine!!.createConversation()
-                    state = InferenceState.READY
-                    Log.d(TAG, "Model loaded successfully with backend: $backend")
-                    return@withContext
-                } catch (e: Exception) {
-                    Log.w(TAG, "Failed with backend $backend: ${e.message}")
-                    lastError = e
-                    engine?.close()
-                    engine = null
-                }
+            try {
+                Log.d(TAG, "Loading model with GPU: $modelPath")
+                val engineConfig = EngineConfig(
+                    modelPath = modelPath,
+                    backend = Backend.GPU(),
+                    cacheDir = context.cacheDir.absolutePath,
+                )
+                engine = Engine(engineConfig)
+                engine!!.initialize()
+                conversation = engine!!.createConversation()
+                state = InferenceState.READY
+                Log.d(TAG, "Model loaded successfully with GPU")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to load model: ${e.message}", e)
+                state = InferenceState.ERROR
+                throw e
             }
-
-            state = InferenceState.ERROR
-            throw lastError ?: RuntimeException("Failed to load model")
         }
     }
 
