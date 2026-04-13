@@ -1,10 +1,15 @@
 package com.gemma4mobile.inference
 
-import com.google.mediapipe.tasks.genai.llminference.LlmInference
-import kotlinx.coroutines.channels.awaitClose
+import com.google.ai.edge.litertlm.Backend
+import com.google.ai.edge.litertlm.Conversation
+import com.google.ai.edge.litertlm.Engine
+import com.google.ai.edge.litertlm.EngineConfig
+import com.google.ai.edge.litertlm.Message
+import com.google.ai.edge.litertlm.SessionConfig
+import com.google.ai.edge.litertlm.SamplerConfig
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import java.io.File
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 
 data class Turn(val role: String, val content: String)
 
@@ -14,29 +19,27 @@ enum class InferenceState {
 
 class GemmaInferenceEngine {
 
-    private var llmInference: LlmInference? = null
+    private var engine: Engine? = null
+    private var conversation: Conversation? = null
 
     var state: InferenceState = InferenceState.UNLOADED
         private set
 
     fun formatPrompt(message: String, history: List<Turn> = emptyList()): String {
-        val sb = StringBuilder()
-        for (turn in history) {
-            sb.append("<start_of_turn>${turn.role}\n${turn.content}<end_of_turn>\n")
-        }
-        sb.append("<start_of_turn>user\n$message<end_of_turn>\n")
-        sb.append("<start_of_turn>model\n")
-        return sb.toString()
+        return message
     }
 
     fun loadModel(modelPath: String, context: android.content.Context) {
         state = InferenceState.LOADING
         try {
-            val options = LlmInference.LlmInferenceOptions.builder()
-                .setModelPath(modelPath)
-                .setMaxTokens(1024)
-                .build()
-            llmInference = LlmInference.createFromOptions(context, options)
+            val engineConfig = EngineConfig(
+                modelPath = modelPath,
+                backend = Backend.GPU,
+                cacheDir = context.cacheDir.absolutePath,
+            )
+            engine = Engine(engineConfig)
+            engine!!.initialize()
+            conversation = engine!!.createConversation()
             state = InferenceState.READY
         } catch (e: Exception) {
             state = InferenceState.ERROR
@@ -44,30 +47,29 @@ class GemmaInferenceEngine {
         }
     }
 
-    fun generateStream(prompt: String): Flow<String> = callbackFlow {
+    fun generateStream(prompt: String): Flow<String> = flow {
         state = InferenceState.GENERATING
+        val conv = conversation ?: throw IllegalStateException("Model not loaded")
 
-        llmInference?.generateResponseAsync(prompt) { partialResult, done ->
-            if (partialResult != null) {
-                trySend(partialResult)
+        val message = Message.of(prompt)
+        conv.sendMessageAsync(message)
+            .collect { chunk ->
+                emit(chunk.toString())
             }
-            if (done) {
-                state = InferenceState.READY
-                close()
-            }
-        } ?: run {
-            state = InferenceState.ERROR
-            close(IllegalStateException("Model not loaded"))
-        }
 
-        awaitClose {
-            state = InferenceState.READY
-        }
+        state = InferenceState.READY
+    }
+
+    fun resetConversation() {
+        conversation?.close()
+        conversation = engine?.createConversation()
     }
 
     fun unload() {
-        llmInference?.close()
-        llmInference = null
+        conversation?.close()
+        conversation = null
+        engine?.close()
+        engine = null
         state = InferenceState.UNLOADED
     }
 }

@@ -34,3 +34,5 @@ app/build/
 app/app/build/
 *.apk
 local.properties
+model/output/
+*.litertlm

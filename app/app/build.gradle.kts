@@ -50,7 +50,7 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.tooling.preview)
     debugImplementation(libs.compose.tooling)
-    implementation(libs.mediapipe.genai)
+    implementation("com.google.ai.edge.litertlm:litertlm-android:0.8.0")
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)

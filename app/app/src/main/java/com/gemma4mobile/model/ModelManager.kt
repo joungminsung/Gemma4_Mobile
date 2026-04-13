@@ -64,6 +64,6 @@ class ModelManager @Inject constructor(
 
     companion object {
         /** 개발용 로컬 모델 경로 */
-        const val DEV_MODEL_PATH = "/data/local/tmp/gemma4mobile/gemma4_ko_lite.task"
+        const val DEV_MODEL_PATH = "/data/local/tmp/gemma4mobile/gemma-4-E2B-it.litertlm"
     }
 }
