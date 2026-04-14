@@ -1,0 +1,79 @@
+<h2>채팅 화면 레이아웃</h2>
+<p class="subtitle">메시지 표시 방식을 선택합니다</p>
+
+<div class="split">
+  <div class="mockup" data-choice="a" onclick="toggleSelect(this)" style="cursor:pointer">
+    <div class="mockup-header">A. 버블 스타일 (현재)</div>
+    <div class="mockup-body" style="background: #212121; padding: 16px;">
+      <!-- User message - right aligned bubble -->
+      <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+        <div style="background:#2f2f2f; color:#ececec; padding:10px 14px; border-radius:16px 16px 4px 16px; max-width:75%; font-size:13px;">
+          한국의 수도는 어디인가요?
+        </div>
+      </div>
+      <!-- AI message - left aligned bubble -->
+      <div style="display:flex; justify-content:flex-start; margin-bottom:12px;">
+        <div style="background:#343541; color:#d1d5db; padding:10px 14px; border-radius:16px 16px 16px 4px; max-width:75%; font-size:13px;">
+          대한민국의 수도는 서울입니다. 서울은 한강을 중심으로 발전한 도시로...
+        </div>
+      </div>
+      <div style="color:#666; font-size:11px; text-align:center; margin-top:8px;">카카오톡 스타일 — 양쪽 버블</div>
+    </div>
+  </div>
+
+  <div class="mockup" data-choice="b" onclick="toggleSelect(this)" style="cursor:pointer">
+    <div class="mockup-header">B. 풀 와이드 스타일 (ChatGPT 방식)</div>
+    <div class="mockup-body" style="background: #212121; padding: 0;">
+      <!-- User message - full width with icon -->
+      <div style="padding:16px 20px; display:flex; gap:12px;">
+        <div style="width:28px; height:28px; border-radius:50%; background:#5436DA; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:white; font-size:12px; font-weight:bold;">나</div>
+        <div style="color:#ececec; font-size:13px; line-height:1.6;">한국의 수도는 어디인가요?</div>
+      </div>
+      <!-- AI message - full width with icon -->
+      <div style="padding:16px 20px; background:#2f2f2f; display:flex; gap:12px;">
+        <div style="width:28px; height:28px; border-radius:50%; background:#19c37d; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
+          <span style="color:white; font-size:14px;">✦</span>
+        </div>
+        <div style="color:#d1d5db; font-size:13px; line-height:1.6;">
+          대한민국의 수도는 <b style="color:#fff">서울</b>입니다.<br><br>
+          서울은 한강을 중심으로 발전한 도시로, 약 1,000만 명의 인구가 거주합니다.
+        </div>
+      </div>
+      <div style="color:#666; font-size:11px; text-align:center; padding:8px;">ChatGPT 스타일 — 전체 폭, 아이콘</div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top: 16px;">
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>A 버블 장점</h4>
+      <ul>
+        <li>모바일에 익숙한 UI</li>
+        <li>짧은 대화에 적합</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>A 버블 단점</h4>
+      <ul>
+        <li>긴 답변 시 가독성 나쁨</li>
+        <li>마크다운 렌더링 어색함</li>
+      </ul>
+    </div>
+  </div>
+  <div class="pros-cons" style="margin-top:8px;">
+    <div class="pros">
+      <h4>B 풀 와이드 장점</h4>
+      <ul>
+        <li>긴 답변/코드 가독성 좋음</li>
+        <li>마크다운 렌더링 자연스러움</li>
+      </ul>
+    </div>
+    <div class="cons">
+      <h4>B 풀 와이드 단점</h4>
+      <ul>
+        <li>짧은 대화에서 여백 많음</li>
+      </ul>
+    </div>
+  </div>
+</div>
