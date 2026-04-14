@@ -25,6 +25,7 @@ class SettingsRepository @Inject constructor(
     private val dataStore: DataStore<Preferences>,
 ) {
     private object Keys {
+        val LAST_MODEL_PATH = stringPreferencesKey("last_model_path")
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val SYSTEM_PROMPT = stringPreferencesKey("system_prompt")
         val TEMPERATURE = floatPreferencesKey("temperature")
@@ -78,5 +79,13 @@ class SettingsRepository @Inject constructor(
 
     suspend fun updateAssistButton(enabled: Boolean) {
         dataStore.edit { it[Keys.ASSIST_BUTTON] = enabled }
+    }
+
+    suspend fun saveLastModelPath(path: String) {
+        dataStore.edit { it[Keys.LAST_MODEL_PATH] = path }
+    }
+
+    val lastModelPath: Flow<String?> = dataStore.data.map { prefs ->
+        prefs[Keys.LAST_MODEL_PATH]
     }
 }

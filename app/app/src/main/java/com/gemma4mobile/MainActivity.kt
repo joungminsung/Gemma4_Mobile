@@ -21,6 +21,7 @@ import com.gemma4mobile.ui.onboarding.OnboardingScreen
 import com.gemma4mobile.ui.settings.SettingsScreen
 import com.gemma4mobile.ui.theme.Gemma4MobileTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -50,11 +51,39 @@ class MainActivity : ComponentActivity() {
             Gemma4MobileTheme(darkTheme = isDark) {
                 var modelReady by remember { mutableStateOf(false) }
                 var showSettings by remember { mutableStateOf(false) }
+                var autoLoading by remember { mutableStateOf(true) }
+
+                // 앱 시작 시 마지막 모델 자동 로드
+                LaunchedEffect(Unit) {
+                    settingsRepository.lastModelPath.collect { path ->
+                        if (path != null && !modelReady && autoLoading) {
+                            try {
+                                modelManager.loadModelFromInternalPath(path)
+                                modelReady = true
+                            } catch (_: Exception) {
+                                // 저장된 경로의 모델이 없으면 온보딩으로
+                            }
+                            autoLoading = false
+                        } else {
+                            autoLoading = false
+                        }
+                    }
+                }
 
                 when {
+                    autoLoading -> {
+                        // 자동 로드 중 로딩 화면
+                        androidx.compose.foundation.layout.Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = androidx.compose.ui.Alignment.Center,
+                        ) {
+                            androidx.compose.material3.CircularProgressIndicator()
+                        }
+                    }
                     !modelReady -> {
                         OnboardingScreen(
                             modelManager = modelManager,
+                            settingsRepository = settingsRepository,
                             onModelReady = { modelReady = true },
                         )
                     }

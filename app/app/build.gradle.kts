@@ -50,6 +50,7 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
+    implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.compose.tooling.preview)
     debugImplementation(libs.compose.tooling)
     implementation("com.google.ai.edge.litertlm:litertlm-android:0.10.0")

@@ -74,9 +74,25 @@ class ModelManager @Inject constructor(
             }
 
             engine.loadModel(destFile.absolutePath, context)
+            _lastLoadedPath = destFile.absolutePath
         }
         _currentTier.value = ModelTier.LITE
     }
+
+    /**
+     * 내부 저장소에 이미 복사된 모델을 직접 로드. 앱 재시작 시 사용.
+     */
+    suspend fun loadModelFromInternalPath(internalPath: String) {
+        val file = File(internalPath)
+        if (!file.exists()) throw IllegalStateException("Model not found: $internalPath")
+        engine.unload()
+        engine.loadModel(internalPath, context)
+        _currentTier.value = ModelTier.LITE
+        _lastLoadedPath = internalPath
+    }
+
+    private var _lastLoadedPath: String? = null
+    val lastLoadedPath: String? get() = _lastLoadedPath
 
     fun unloadModel() {
         engine.unload()

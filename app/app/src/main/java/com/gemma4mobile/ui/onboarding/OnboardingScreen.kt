@@ -10,12 +10,14 @@ import androidx.compose.ui.unit.dp
 import com.gemma4mobile.model.DownloadState
 import com.gemma4mobile.model.ModelManager
 import com.gemma4mobile.model.ModelTier
+import com.gemma4mobile.settings.SettingsRepository
 import kotlinx.coroutines.launch
 import java.io.File
 
 @Composable
 fun OnboardingScreen(
     modelManager: ModelManager,
+    settingsRepository: SettingsRepository? = null,
     onModelReady: () -> Unit,
 ) {
     val recommended = modelManager.recommendedTier
@@ -93,6 +95,10 @@ fun OnboardingScreen(
                     scope.launch {
                         try {
                             modelManager.loadModelFromPath(devModelPath)
+                            // 모델 경로 저장 — 다음에 앱 열 때 자동 로드
+                            modelManager.lastLoadedPath?.let { path ->
+                                settingsRepository?.saveLastModelPath(path)
+                            }
                             onModelReady()
                         } catch (e: Exception) {
                             isLoading = false

@@ -9,14 +9,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.outlined.ContentCopy
+import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,24 +49,19 @@ fun AiResponseCard(
                 .background(GemmaTheme.gemmaColors.aiIcon),
             contentAlignment = Alignment.Center,
         ) {
-            Text("✦", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Icon(
+                imageVector = Icons.Filled.AutoAwesome,
+                contentDescription = "AI",
+                tint = Color.White,
+                modifier = Modifier.size(16.dp),
+            )
         }
 
         Spacer(Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            if (isStreaming) {
-                // Plain text during streaming
-                Text(
-                    text = content,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyLarge,
-                    lineHeight = 24.sp,
-                )
-            } else {
-                // Markdown after completion
-                MarkdownContent(text = content)
-            }
+            // 실시간 마크다운 렌더링 — 스트리밍 중에도 적용
+            MarkdownContent(text = content)
 
             // Action buttons (only after streaming completes)
             if (!isStreaming && content.isNotEmpty()) {
@@ -76,7 +75,11 @@ fun AiResponseCard(
                         },
                         modifier = Modifier.size(32.dp),
                     ) {
-                        Text("📋", fontSize = 14.sp)
+                        Icon(
+                            Icons.Outlined.ContentCopy, "복사",
+                            tint = GemmaTheme.gemmaColors.placeholder,
+                            modifier = Modifier.size(16.dp),
+                        )
                     }
                     IconButton(
                         onClick = {
@@ -89,7 +92,7 @@ fun AiResponseCard(
                         modifier = Modifier.size(32.dp),
                     ) {
                         Icon(
-                            Icons.Default.Share, "공유",
+                            Icons.Outlined.Share, "공유",
                             tint = GemmaTheme.gemmaColors.placeholder,
                             modifier = Modifier.size(16.dp),
                         )
