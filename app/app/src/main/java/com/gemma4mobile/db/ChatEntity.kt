@@ -16,6 +16,7 @@ data class ChatMessage(
 data class ChatSession(
     @PrimaryKey val id: String,
     val title: String,
+    val systemPrompt: String = "",
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
 )

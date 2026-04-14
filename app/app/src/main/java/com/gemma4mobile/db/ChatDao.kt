@@ -23,4 +23,10 @@ interface ChatDao {
 
     @Delete
     suspend fun deleteSession(session: ChatSession)
+
+    @Query("SELECT * FROM sessions WHERE title LIKE '%' || :query || '%' ORDER BY updatedAt DESC")
+    fun searchSessions(query: String): Flow<List<ChatSession>>
+
+    @Query("UPDATE sessions SET title = :title WHERE id = :sessionId")
+    suspend fun renameSession(sessionId: String, title: String)
 }

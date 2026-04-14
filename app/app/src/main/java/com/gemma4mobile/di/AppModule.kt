@@ -27,7 +27,8 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "gemma4mobile.db",
-        ).build()
+        ).addMigrations(AppDatabase.MIGRATION_1_2)
+            .build()
     }
 
     @Provides
