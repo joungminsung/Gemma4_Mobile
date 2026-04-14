@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <voice-interaction-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:sessionService="com.gemma4mobile.assist.GemmaVoiceInteractionSessionService"
+    android:recognitionService="com.gemma4mobile.assist.GemmaRecognitionService"
     android:supportsAssist="true"
-    android:supportsLaunchVoiceAssistFromKeyguard="true" />
+    android:supportsLaunchVoiceAssistFromKeyguard="true"
+    android:supportsLocalInteraction="true" />
