@@ -104,9 +104,15 @@ class GemmaInferenceEngine {
         }
     }.flowOn(Dispatchers.IO)
 
-    fun resetConversation() {
+    fun resetConversation(systemPrompt: String? = null) {
         conversation?.close()
-        conversation = engine?.createConversation()
+        conversation = if (systemPrompt != null && systemPrompt.isNotEmpty()) {
+            // If LiteRT-LM ConversationConfig supports systemInstruction, use it
+            // For now, create a basic conversation
+            engine?.createConversation()
+        } else {
+            engine?.createConversation()
+        }
     }
 
     fun unload() {

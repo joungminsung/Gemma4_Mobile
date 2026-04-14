@@ -196,8 +196,16 @@ fun ChatScreenContent(
                         )
                     }
                 }
-                // Microphone button placeholder (will be added in Task 8)
-                // Shows when inputText is empty
+                if (inputText.isBlank()) {
+                    VoiceInputButton(
+                        onResult = { text ->
+                            inputText = text
+                        },
+                        onPartialResult = { text ->
+                            inputText = text
+                        },
+                    )
+                }
             }
         }
     }
