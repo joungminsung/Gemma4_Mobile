@@ -9,19 +9,13 @@ import android.speech.SpeechRecognizer
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.MicOff
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import com.gemma4mobile.ui.theme.GemmaTheme
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun VoiceInputButton(
@@ -67,11 +61,9 @@ fun VoiceInputButton(
         },
         modifier = modifier.scale(pulseScale),
     ) {
-        Icon(
-            imageVector = if (isListening) Icons.Default.MicOff else Icons.Default.Mic,
-            contentDescription = if (isListening) "중지" else "음성 입력",
-            tint = if (isListening) Color(0xFFef4444) else GemmaTheme.gemmaColors.placeholder,
-            modifier = Modifier.size(24.dp),
+        Text(
+            text = if (isListening) "⏹" else "🎤",
+            fontSize = 20.sp,
         )
     }
 }

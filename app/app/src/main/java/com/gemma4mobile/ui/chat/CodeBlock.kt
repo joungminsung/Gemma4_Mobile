@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -59,12 +57,7 @@ fun CodeBlock(
                 },
                 modifier = Modifier.size(28.dp),
             ) {
-                Icon(
-                    imageVector = Icons.Default.ContentCopy,
-                    contentDescription = "복사",
-                    tint = Color(0xFF8e8ea0),
-                    modifier = Modifier.size(14.dp),
-                )
+                Text("📋", fontSize = 12.sp)
             }
         }
 
