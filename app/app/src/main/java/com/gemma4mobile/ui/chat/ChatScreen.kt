@@ -19,9 +19,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.gemma4mobile.chat.ChatUiState
 import com.gemma4mobile.chat.ChatViewModel
+import com.gemma4mobile.tools.ui.ConfirmationSheet
+import com.gemma4mobile.tools.ui.ToolStatusIndicator
 import com.gemma4mobile.ui.theme.GemmaTheme
 
 @Composable
@@ -31,6 +35,30 @@ fun ChatScreen(
     onNewChat: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        val allGranted = results.values.all { it }
+        viewModel.onPermissionsResult(allGranted)
+    }
+
+    // Observe permission requests
+    LaunchedEffect(Unit) {
+        viewModel.permissionRequest.collect { permissions ->
+            permissionLauncher.launch(permissions.toTypedArray())
+        }
+    }
+
+    // Confirmation sheet
+    uiState.pendingConfirmation?.let { info ->
+        ConfirmationSheet(
+            info = info,
+            onConfirm = viewModel::confirmToolExecution,
+            onDeny = viewModel::denyToolExecution,
+        )
+    }
 
     ChatScreenContent(
         uiState = uiState,
@@ -130,6 +158,12 @@ fun ChatScreenContent(
                 if (uiState.streamingText.isNotEmpty()) {
                     item {
                         AiResponseCard(content = uiState.streamingText, isStreaming = true)
+                    }
+                }
+
+                if (uiState.toolStatus.isExecuting) {
+                    item {
+                        ToolStatusIndicator(toolStatus = uiState.toolStatus)
                     }
                 }
             }
