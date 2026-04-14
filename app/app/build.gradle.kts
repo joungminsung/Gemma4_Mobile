@@ -65,6 +65,8 @@ dependencies {
     implementation(libs.coroutines.core)
     implementation(libs.coroutines.android)
     implementation(libs.okhttp)
+    implementation(libs.datastore.preferences)
+    implementation(libs.markdown.renderer)
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.coroutines.test)
