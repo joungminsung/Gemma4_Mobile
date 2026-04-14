@@ -25,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.gemma4mobile.chat.ChatUiState
 import com.gemma4mobile.chat.ChatViewModel
 import com.gemma4mobile.tools.ui.ConfirmationSheet
+import com.gemma4mobile.tools.ui.ThinkingStepsIndicator
 import com.gemma4mobile.tools.ui.ToolStatusIndicator
 import com.gemma4mobile.ui.theme.GemmaTheme
 
@@ -79,8 +80,8 @@ fun ChatScreenContent(
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
-    LaunchedEffect(uiState.messages.size, uiState.streamingText) {
-        val targetIndex = uiState.messages.size + if (uiState.streamingText.isNotEmpty()) 0 else -1
+    LaunchedEffect(uiState.messages.size, uiState.streamingText, uiState.thinkingSteps.size) {
+        val targetIndex = uiState.messages.size + if (uiState.streamingText.isNotEmpty() || uiState.thinkingSteps.isNotEmpty()) 0 else -1
         if (targetIndex >= 0) {
             listState.animateScrollToItem(targetIndex)
         }
@@ -124,7 +125,7 @@ fun ChatScreenContent(
         )
 
         // Messages
-        if (uiState.messages.isEmpty() && uiState.streamingText.isEmpty()) {
+        if (uiState.messages.isEmpty() && uiState.streamingText.isEmpty() && uiState.thinkingSteps.isEmpty()) {
             // Empty state
             Box(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
@@ -161,9 +162,9 @@ fun ChatScreenContent(
                     }
                 }
 
-                if (uiState.toolStatus.isExecuting) {
+                if (uiState.thinkingSteps.isNotEmpty()) {
                     item {
-                        ToolStatusIndicator(toolStatus = uiState.toolStatus)
+                        ThinkingStepsIndicator(steps = uiState.thinkingSteps)
                     }
                 }
             }

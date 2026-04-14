@@ -19,6 +19,11 @@ data class ToolCallUiInfo(
     val arguments: Map<String, Any>,
 )
 
+data class ThinkingStep(
+    val label: String,
+    val isDone: Boolean = false,
+)
+
 data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
     val isGenerating: Boolean = false,
@@ -27,6 +32,7 @@ data class ChatUiState(
     val error: String? = null,
     val toolStatus: ToolStatus = ToolStatus(),
     val pendingConfirmation: ToolCallUiInfo? = null,
+    val thinkingSteps: List<ThinkingStep> = emptyList(),
 )
 
 @HiltViewModel
@@ -121,6 +127,22 @@ class ChatViewModel @Inject constructor(
         _searchQuery.value = query
     }
 
+    private fun addThinkingStep(label: String) {
+        _uiState.update { state ->
+            state.copy(thinkingSteps = state.thinkingSteps + ThinkingStep(label))
+        }
+    }
+
+    private fun completeLastThinkingStep() {
+        _uiState.update { state ->
+            val steps = state.thinkingSteps.toMutableList()
+            if (steps.isNotEmpty()) {
+                steps[steps.lastIndex] = steps.last().copy(isDone = true)
+            }
+            state.copy(thinkingSteps = steps)
+        }
+    }
+
     fun sendMessage(text: String) {
         val sessionId = _currentSessionId.value ?: return
         if (modelManager.inferenceState != InferenceState.READY) return
@@ -131,7 +153,7 @@ class ChatViewModel @Inject constructor(
             val systemPrompt = SystemPromptBuilder.build("")
             val history = _uiState.value.messages.map { Turn(it.role, it.content) }
 
-            _uiState.update { it.copy(isGenerating = true, streamingText = "") }
+            _uiState.update { it.copy(isGenerating = true, streamingText = "", thinkingSteps = emptyList()) }
 
             runInferenceWithToolLoop(sessionId, text, systemPrompt, history)
         }
@@ -154,40 +176,50 @@ class ChatViewModel @Inject constructor(
 
         try {
             while (chainCount <= ToolRouter.MAX_CHAIN_COUNT) {
+                addThinkingStep("추론 중...")
+
                 val fullResponse = StringBuilder()
 
                 modelManager.engine.generateStream(conversationContext.toString()).collect { token ->
                     fullResponse.append(token)
-                    val displayText = if (ToolCallParser.hasOpenToolCall(fullResponse.toString())) {
-                        ToolCallParser.extractText(fullResponse.toString())
-                    } else {
-                        fullResponse.toString()
-                    }
+                    // 항상 extractText로 tool_call JSON을 필터링
+                    val displayText = ToolCallParser.extractText(fullResponse.toString())
                     _uiState.update { it.copy(streamingText = displayText) }
                 }
+
+                completeLastThinkingStep()
 
                 val output = fullResponse.toString()
                 val toolCalls = ToolCallParser.parse(output)
 
                 if (toolCalls.isEmpty()) {
+                    // 툴 호출 없음 — 최종 응답
                     val finalText = ToolCallParser.extractText(output)
                     repository.addMessage(sessionId, "model", finalText)
                     break
                 }
 
+                // 스트리밍 텍스트에서 tool_call 제거한 텍스트만 유지
+                _uiState.update { it.copy(streamingText = ToolCallParser.extractText(output)) }
+
                 val toolResultsText = StringBuilder()
                 for (tc in toolCalls) {
                     val tn = toolRouter.getToolName(tc.name)
 
+                    // 권한 확인
                     if (tn != null && !permissionManager.hasPermissions(tn)) {
                         val missing = permissionManager.getMissingPermissions(tn)
                         _permissionRequest.emit(missing)
+                        addThinkingStep("${tn.statusMessage} (권한 필요)")
+                        completeLastThinkingStep()
                         val errorResult = ToolResult(name = tc.name, error = "권한이 필요합니다: ${missing.joinToString()}")
                         toolResultsText.append(errorResult.toXml()).append("\n")
                         continue
                     }
 
+                    // 위험 액션 확인
                     if (tn != null && tn.requiresConfirmation) {
+                        addThinkingStep("${tn.statusMessage} — 확인 대기")
                         _uiState.update {
                             it.copy(pendingConfirmation = ToolCallUiInfo(tn, tc.arguments))
                         }
@@ -195,9 +227,12 @@ class ChatViewModel @Inject constructor(
                         return
                     }
 
+                    // 툴 실행
+                    addThinkingStep(tn?.statusMessage ?: "${tc.name} 실행 중...")
                     _uiState.update { it.copy(toolStatus = ToolStatus(tn, true)) }
                     val result = toolRouter.execute(tc)
                     _uiState.update { it.copy(toolStatus = ToolStatus()) }
+                    completeLastThinkingStep()
                     toolResultsText.append(result.toXml()).append("\n")
                 }
 
@@ -212,7 +247,9 @@ class ChatViewModel @Inject constructor(
         } catch (e: Exception) {
             _uiState.update { it.copy(error = e.message) }
         } finally {
-            _uiState.update { it.copy(isGenerating = false, streamingText = "", toolStatus = ToolStatus()) }
+            _uiState.update {
+                it.copy(isGenerating = false, streamingText = "", toolStatus = ToolStatus(), thinkingSteps = emptyList())
+            }
         }
     }
 
@@ -224,13 +261,16 @@ class ChatViewModel @Inject constructor(
 
         viewModelScope.launch {
             val tn = toolRouter.getToolName(tc.name)
+            completeLastThinkingStep()
+            addThinkingStep(tn?.statusMessage ?: "${tc.name} 실행 중...")
             _uiState.update { it.copy(toolStatus = ToolStatus(tn, true)) }
             val result = toolRouter.execute(tc)
             _uiState.update { it.copy(toolStatus = ToolStatus()) }
+            completeLastThinkingStep()
 
             val resultText = result.result?.toString(2) ?: result.error ?: ""
             repository.addMessage(sessionId, "model", "${tn?.statusMessage ?: tc.name} 완료\n$resultText")
-            _uiState.update { it.copy(isGenerating = false, streamingText = "") }
+            _uiState.update { it.copy(isGenerating = false, streamingText = "", thinkingSteps = emptyList()) }
         }
     }
 
@@ -245,6 +285,7 @@ class ChatViewModel @Inject constructor(
                     pendingConfirmation = null,
                     isGenerating = false,
                     streamingText = "",
+                    thinkingSteps = emptyList(),
                 )
             }
         }
@@ -255,7 +296,7 @@ class ChatViewModel @Inject constructor(
             val sessionId = _currentSessionId.value ?: return
             viewModelScope.launch {
                 repository.addMessage(sessionId, "model", "필요한 권한이 거부되어 기능을 실행할 수 없습니다.")
-                _uiState.update { it.copy(isGenerating = false, streamingText = "") }
+                _uiState.update { it.copy(isGenerating = false, streamingText = "", thinkingSteps = emptyList()) }
             }
         }
     }

@@ -17,12 +17,12 @@ import javax.inject.Singleton
 @Singleton
 class ModelManager @Inject constructor(
     @ApplicationContext private val context: Context,
+    val engine: GemmaInferenceEngine,
 ) {
     private val profiler = DeviceProfiler.fromContext(context)
     private val downloader = ModelDownloader(
         baseDir = context.filesDir.resolve("models").absolutePath,
     )
-    val engine = GemmaInferenceEngine()
 
     private val _currentTier = MutableStateFlow<ModelTier?>(null)
     val currentTier: StateFlow<ModelTier?> = _currentTier

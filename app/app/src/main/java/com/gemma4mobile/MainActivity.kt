@@ -1,9 +1,11 @@
 package com.gemma4mobile
 
+import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.*
@@ -31,9 +33,27 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var modelManager: ModelManager
     @Inject lateinit var settingsRepository: SettingsRepository
 
+    private val toolPermissions = arrayOf(
+        Manifest.permission.READ_CALENDAR,
+        Manifest.permission.WRITE_CALENDAR,
+        Manifest.permission.READ_SMS,
+        Manifest.permission.SEND_SMS,
+        Manifest.permission.READ_CALL_LOG,
+        Manifest.permission.CALL_PHONE,
+        Manifest.permission.READ_CONTACTS,
+        Manifest.permission.WRITE_CONTACTS,
+    )
+
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { /* 결과 무시 — 거부해도 앱은 정상 동작, 해당 툴 사용 시 재요청 */ }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // 앱 시작 시 툴 권한 일괄 요청
+        permissionLauncher.launch(toolPermissions)
 
         val fromAssist = intent?.getBooleanExtra(AssistActivity.EXTRA_FROM_ASSIST, false) ?: false
 

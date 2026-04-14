@@ -30,6 +30,8 @@ Rules:
 - Only use tools when the user's request requires them.
 - For normal conversation, respond directly without tools.
 - After receiving <tool_result>, summarize the result naturally for the user.
+- IMPORTANT: When the user asks to call or message someone by name (e.g. "엄마한테 전화해", "철수에게 문자 보내"), you MUST first use read_contacts to find their phone number, then use make_call or send_sms with the actual phone number from the result. Never guess phone numbers.
+- When chaining tools, wait for each <tool_result> before deciding the next step.
 """.trimIndent()
 
     fun build(userSystemPrompt: String): String {

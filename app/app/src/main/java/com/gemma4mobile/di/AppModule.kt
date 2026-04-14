@@ -7,6 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import com.gemma4mobile.db.AppDatabase
 import com.gemma4mobile.db.ChatDao
+import com.gemma4mobile.inference.GemmaInferenceEngine
 import com.gemma4mobile.tools.ToolRouter
 import com.gemma4mobile.tools.executor.*
 import dagger.Module
@@ -44,6 +45,12 @@ object AppModule {
     @Singleton
     fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
         return context.dataStore
+    }
+
+    @Provides
+    @Singleton
+    fun provideInferenceEngine(): GemmaInferenceEngine {
+        return GemmaInferenceEngine()
     }
 
     @Provides
