@@ -8,6 +8,7 @@ import androidx.room.Room
 import com.gemma4mobile.db.AppDatabase
 import com.gemma4mobile.db.ChatDao
 import com.gemma4mobile.tools.ToolRouter
+import com.gemma4mobile.tools.executor.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -56,7 +57,31 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideToolRouter(): ToolRouter {
-        return ToolRouter()
+    fun provideToolRouter(
+        webSearch: WebSearchExecutor,
+        calendarRead: CalendarReadExecutor,
+        calendarWrite: CalendarWriteExecutor,
+        smsRead: SmsReadExecutor,
+        smsSend: SmsSendExecutor,
+        callLogRead: CallLogReadExecutor,
+        makeCall: MakeCallExecutor,
+        contactsRead: ContactsReadExecutor,
+        contactsWrite: ContactsWriteExecutor,
+        alarmRead: AlarmReadExecutor,
+        alarmSet: AlarmSetExecutor,
+    ): ToolRouter {
+        val router = ToolRouter()
+        router.register(webSearch)
+        router.register(calendarRead)
+        router.register(calendarWrite)
+        router.register(smsRead)
+        router.register(smsSend)
+        router.register(callLogRead)
+        router.register(makeCall)
+        router.register(contactsRead)
+        router.register(contactsWrite)
+        router.register(alarmRead)
+        router.register(alarmSet)
+        return router
     }
 }
